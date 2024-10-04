@@ -16,6 +16,7 @@ acceleration = 4000.0
 jump_velocity = 300.0
 gravity = 1000.0
 attack_time = 0.6
+attack_cooldown = 0.2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_pryu6")
@@ -26,9 +27,6 @@ texture = ExtResource("1_68f7x")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
-[node name="AttackSpawner" type="Node2D" parent="."]
-position = Vector2(30, 0)
-
 [node name="PickupCollectionArea" type="Area2D" parent="."]
 collision_layer = 0
 collision_mask = 2
@@ -36,5 +34,8 @@ monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PickupCollectionArea"]
 shape = SubResource("RectangleShape2D_mf8s2")
+
+[node name="AttackSpawner" type="Node2D" parent="."]
+position = Vector2(30, 0)
 
 [connection signal="area_entered" from="PickupCollectionArea" to="." method="_on_pickup_collection_area_entered"]

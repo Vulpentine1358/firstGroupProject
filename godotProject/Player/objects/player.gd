@@ -20,14 +20,22 @@ var can_attack = true
 # Please don't access this variable directly in code,
 # Instead use the functions below to interact with the inventory
 # (Godot please add access specifiers I love encapsulation)
-# Btw I added a type specifier to this if u don't know what it is just ignore it,
-# it's to make the @export thing work better in the editor
-@export var inventory: Array[String] = []
+@export var inventory = []
 
 # Variable holding a reference to the pickup collection area hitbox thing
 @onready var pickup_collection_area = get_node("PickupCollectionArea")
 
 func _physics_process(delta):
+	movement(delta)
+	
+	if Input.is_action_just_pressed("attack") && can_attack: 
+		attack()
+	
+	# Finally, just let the engine use the player's velocity
+	# to move the player and handle collisions
+	move_and_slide()
+
+func movement(delta): 
 	var input_axis = Input.get_axis("move_left", "move_right")
 	
 	# This uses acceleration for smoother movement than just
@@ -41,15 +49,21 @@ func _physics_process(delta):
 	else:
 		# Same here, positive number to go down 
 		velocity.y += gravity * delta
+
+func attack():
+	var scene = preload("res://Player/objects/attack_area.tscn") 
+	can_attack = false
 	
-	# Geffen's code: 
-	if Input.is_action_just_pressed("attack") && can_attack: 
-		attack()
-	# end of Geffen's code
+	var instance = scene.instantiate()
+	instance.set_name("attack_area")
+	instance.position = get_node("AttackSpawner").position;
+	add_child(instance)
 	
-	# Finally, just let the engine use the player's velocity
-	# to move the player and handle collisions
-	move_and_slide()
+	await get_tree().create_timer(attack_time).timeout
+	instance.queue_free()
+	
+	await get_tree().create_timer(attack_cooldown).timeout
+	can_attack = true
 
 # ========== Inventory Functions ========== #
 
@@ -72,23 +86,6 @@ func add_item(item):
 func clear_inventory():
 	inventory.clear()
 
-# Geffen's code
-var scene = preload("res://Player/objects/attack_area.tscn")
-func attack(): 
-	can_attack = false
-	
-	var instance = scene.instantiate()
-	instance.set_name("attack_area")
-	instance.position = get_node("AttackSpawner").position;
-	add_child(instance)
-	
-	await get_tree().create_timer(attack_time).timeout
-	instance.queue_free()
-	
-	await get_tree().create_timer(attack_cooldown).timeout
-	can_attack = true
-# end of Geffen's code
-
 # When another area enters the pickup collection area,
 # if it has the class name "Pickup" we'll add the item name
 # to the inventory and then free the item node that entered us
@@ -97,6 +94,6 @@ func _on_pickup_collection_area_entered(area) -> void:
 		add_item(area.item_name)
 		area.queue_free()
 		print("Inventory: ", inventory) # debug print
-		
+
 func damage(damageAmount):
 	print("Ouch")
